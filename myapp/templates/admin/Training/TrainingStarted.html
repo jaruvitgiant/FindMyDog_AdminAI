@@ -1,0 +1,244 @@
+{% extends 'admin/baseAI.html' %}
+
+{% block title %}
+Training: {{ training_name }}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto" x-data="trainingMonitor()" @load="init()">
+    <!-- Success Message -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-8 mb-8">
+        <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h2 class="text-2xl font-bold text-green-800 mb-2">Training Started Successfully!</h2>
+                <p class="text-green-700">Your model is now training in the background. Real-time progress is displayed below.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Details Card -->
+    <div class="bg-white rounded-lg shadow-sm p-8 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Training Details</h3>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <!-- Training Name -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Training Name</p>
+                <p class="text-lg font-semibold text-gray-800" x-text="data.training_name">{{ training_name }}</p>
+            </div>
+
+            <!-- Model Type -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Model Type</p>
+                <p class="text-lg font-semibold text-gray-800" x-text="data.model_name">{{ model_name }}</p>
+            </div>
+
+            <!-- Epochs -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Epochs</p>
+                <p class="text-lg font-semibold text-gray-800" x-text="data.epochs">{{ epochs }}</p>
+            </div>
+
+            <!-- Dataset Count -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Dataset Count</p>
+                <p class="text-lg font-semibold text-gray-800" x-text="data.dataset_count">{{ dataset_count }}</p>
+            </div>
+
+            <!-- Status -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Current Status</p>
+                <p class="text-lg font-semibold">
+                    <span 
+                        x-bind:class="getStatusBadgeClass()"
+                        class="inline-block px-3 py-1 rounded-full text-sm font-medium"
+                        x-text="data.status">
+                        {{ status }}
+                    </span>
+                </p>
+            </div>
+
+            <!-- Started Time -->
+            <div class="border-b border-gray-200 pb-4">
+                <p class="text-sm text-gray-600 mb-1">Started at</p>
+                <p class="text-lg font-semibold text-gray-800" x-text="formatDate(data.started_at)">-</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="bg-white rounded-lg shadow-sm p-8 mb-8" x-show="data.status === 'training' || data.status === 'pending'">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Training Progress</h3>
+        
+        <!-- Progress Bar -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600">Overall Progress</span>
+                <span class="text-sm font-semibold text-gray-700" x-text="getProgressPercent() + '%'">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                    class="bg-blue-600 h-3 rounded-full transition-all duration-300" 
+                    x-bind:style="'width: ' + getProgressPercent() + '%'">
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Message -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-sm text-blue-800">
+                <span class="animate-pulse">⏳</span>
+                <span x-text="data.status === 'pending' ? 'Waiting to start...' : 'Training in progress. Please wait...'">
+                    Training in progress...
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Results Section (Show when completed) -->
+    <div class="bg-white rounded-lg shadow-sm p-8 mb-8" x-show="data.status === 'completed'">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6">Training Results ✅</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Accuracy -->
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+                <p class="text-sm text-gray-600 mb-2">Final Accuracy</p>
+                <p class="text-4xl font-bold text-blue-600" x-text="data.accuracy ? (data.accuracy * 100).toFixed(2) + '%' : 'N/A'">-</p>
+                <p class="text-xs text-gray-600 mt-2">Model Accuracy</p>
+            </div>
+
+            <!-- Loss -->
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
+                <p class="text-sm text-gray-600 mb-2">Final Loss</p>
+                <p class="text-4xl font-bold text-green-600" x-text="data.loss ? data.loss.toFixed(4) : 'N/A'">-</p>
+                <p class="text-xs text-gray-600 mt-2">Training Loss</p>
+            </div>
+
+            <!-- Training Duration -->
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
+                <p class="text-sm text-gray-600 mb-2">Training Time</p>
+                <p class="text-4xl font-bold text-purple-600" x-text="getTrainingDuration()">-</p>
+                <p class="text-xs text-gray-600 mt-2">Duration</p>
+            </div>
+        </div>
+
+        <!-- Model Info -->
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-600 mb-2">Model Path</p>
+            <p class="text-sm font-mono text-gray-800 break-all" x-text="data.model_path || 'Not available'">-</p>
+        </div>
+    </div>
+
+    <!-- Error Section (Show if failed) -->
+    <div class="bg-red-50 border border-red-200 rounded-lg p-8 mb-8" x-show="data.status === 'failed'">
+        <h3 class="text-xl font-semibold text-red-800 mb-4">Training Failed ❌</h3>
+        <div class="bg-white rounded p-4 border border-red-100">
+            <p class="text-sm text-red-700 font-mono" x-text="data.error_message || 'Unknown error occurred'">
+                No error message available
+            </p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3 justify-center">
+        <a href="{% url 'page_training' %}" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+            Back to Training Dashboard
+        </a>
+        <button 
+            @click="refreshStatus()"
+            class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">
+            Refresh Now
+        </button>
+    </div>
+
+    <!-- Auto-refresh indicator -->
+    <div class="text-center mt-6 text-sm text-gray-500">
+        <p>Auto-refreshing every 5 seconds... Last updated: <span x-text="lastUpdate">just now</span></p>
+    </div>
+</div>
+
+<script>
+function trainingMonitor() {
+    return {
+        data: {
+            id: {{ training_id }},
+            training_name: '{{ training_name }}',
+            model_name: '{{ model_name }}',
+            dataset_count: {{ dataset_count }},
+            epochs: {{ epochs }},
+            status: '{{ status }}',
+            accuracy: null,
+            loss: null,
+            error_message: null,
+            model_path: null,
+            created_at: null,
+            started_at: null,
+            completed_at: null
+        },
+        lastUpdate: 'just now',
+        autoRefreshInterval: null,
+        
+        init() {
+            this.refreshStatus();
+            // Auto-refresh every 5 seconds
+            this.autoRefreshInterval = setInterval(() => this.refreshStatus(), 5000);
+        },
+        
+        refreshStatus() {
+            fetch(`/training_status/{{ training_id }}/`)
+                .then(res => res.json())
+                .then(data => {
+                    this.data = data;
+                    this.lastUpdate = this.formatTime(new Date());
+                })
+                .catch(error => console.error('Error fetching status:', error));
+        },
+        
+        getStatusBadgeClass() {
+            const statusClasses = {
+                'pending': 'bg-gray-100 text-gray-800',
+                'training': 'bg-blue-100 text-blue-800',
+                'completed': 'bg-green-100 text-green-800',
+                'failed': 'bg-red-100 text-red-800'
+            };
+            return statusClasses[this.data.status] || 'bg-gray-100 text-gray-800';
+        },
+        
+        getProgressPercent() {
+            if (this.data.status === 'completed') return 100;
+            if (this.data.status === 'training') return 50;
+            if (this.data.status === 'pending') return 10;
+            return 0;
+        },
+        
+        formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString();
+        },
+        
+        formatTime(date) {
+            return date.toLocaleTimeString();
+        },
+        
+        getTrainingDuration() {
+            if (!this.data.started_at || !this.data.completed_at) return '-';
+            
+            const start = new Date(this.data.started_at);
+            const end = new Date(this.data.completed_at);
+            const diff = Math.floor((end - start) / 1000); // seconds
+            
+            if (diff < 60) return diff + 's';
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            return `${minutes}m ${seconds}s`;
+        }
+    }
+}
+</script>
+
+{% endblock %}

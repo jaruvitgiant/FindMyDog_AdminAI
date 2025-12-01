@@ -1,97 +1,16 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block title %}รายละเอียด: {{ dog.name }}{% endblock %} 
 
 {% block extra_head %}
-<style>
-    /* ปรับแต่ง Dropzone ให้เข้ากับ DaisyUI */
-    .dropzone {
-        border: 2px dashed #3B82F6;
-        border-radius: 0.5rem;
-        background: #f9fafb;
-        min-height: 200px;
-        padding: 2rem;
-    }
-    .dropzone.dz-drag-hover {
-        border-color: #2563eb;
-        background: #eff6ff;
-    }
-    .dz-preview {
-        margin: 0.5rem;
-        display: inline-block;
-        position: relative;
-    }
-    .dz-preview .dz-image {
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
-    .dz-preview .dz-remove {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: #ef4444;
-        color: white;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 14px;
-        z-index: 10;
-    }
-    .dz-preview .dz-remove:hover {
-        background: #dc2626;
-    }
-    .dz-message {
-        text-align: center;
-        margin: 2rem 0;
-        pointer-events: none;
-    }
-    .dz-message p {
-        margin-bottom: 1rem;
-    }
-    .dz-message .dz-button {
-        background: #3B82F6;
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.5rem;
-        border: none;
-        cursor: pointer;
-        font-weight: 500;
-        pointer-events: auto;
-    }
-    .dz-message .dz-button:hover {
-        background: #2563eb;
-    }
-    /* ซ่อน preview ของ Dropzone เอง เพราะเราจะใช้ preview ของเราเอง */
-    .dz-preview {
-        display: none !important;
-    }
-</style>
+<!-- Dropzone Custom CSS -->
+<link rel="stylesheet" href="{% static 'dropzone-custom.css' %}">
 {% endblock %}
 
 {% block content %}
     <div class="max-w-4xl mx-auto p-8">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-4xl font-extrabold text-gray-800">{{ dog.name }} <span class="text-xl">🐕</span></h1>
-            {% if not is_edit_mode %}
-                <div class="flex gap-2">
-                    <a href="{% url 'dog_detail' dog.id %}?edit=true" class="btn btn-warning text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l4.125-4.125a1.875 1.875 0 112.652 2.652l-4.125 4.125a4.5 4.5 0 01-1.897 1.13L6 18l-2.685-.8a4.5 4.5 0 01-1.13-1.897l4.125-4.125a1.875 1.875 0 112.652-2.652L16.862 4.487z" />
-                        </svg>
-                        แก้ไขข้อมูล
-                    </a>
-                    <button onclick="delete_modal.showModal()" class="btn btn-error text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                        ลบสุนัข
-                    </button>
-                </div>
-            {% endif %}
         </div>
         
         {% if messages %}
@@ -105,13 +24,21 @@
         {% endif %}
         
         <div class="mb-6">
-            {% if dog.is_lost %}
+            {% if dog.is_lost and not dog.organization %}
                 <div role="alert" class="alert alert-error text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     <span>⚠️ **สถานะ:** สุนัขหาย (LOST) โปรดติดต่อเจ้าของ!</span>
                 </div>
-            {% else %}
+            {% elif not dog.is_lost and not og.organization %}
                 <span class="badge badge-lg badge-success text-white font-bold">🏠 อยู่กับเจ้าของ</span>
+            {% endif %}
+            {% if dog.is_lost and dog.organization %}
+                <div role="alert" class="alert alert-error text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>⚠️ **สถานะ:** สุนัขหาย (LOST) โปรดติดต่อโฮงเกลือหมา!</span>
+                </div>
+            {% elif not dog.is_lost and og.organization %}
+                <span class="badge badge-lg badge-success text-white font-bold">🏠 อยู่กับโฮงเกลือหมา</span>
             {% endif %}
         </div>
         
@@ -124,29 +51,39 @@
                     <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">ข้อมูลพื้นฐาน</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="form-control">{{ form.name.label_tag }}{{ form.name }}</div>
-                        <div class="form-control">{{ form.breed.label_tag }}{{ form.breed }}</div>
                         <div class="form-control">{{ form.age.label_tag }}{{ form.age }}</div>
+                        
                         <div class="form-control">
-                            <label class="label">{{ form.gender.label }}</label>
+                            {% comment %} <label class="label">{{ form.gender.label }}</label> {% endcomment %}
+                            {{ form.gender.label }}
                             {{ form.gender }}
                         </div>
                     </div>
                 </div>
-
+    
                 <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
                     <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">ลักษณะทางกายภาพ</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="form-control">{{ form.primary_color.label_tag }}{{ form.primary_color }}</div>
                         <div class="form-control">{{ form.secondary_color.label_tag }}{{ form.secondary_color }}</div>
-                        <div class="form-control">
-                            <label class="label">{{ form.size.label }}</label>
-                            {{ form.size }}
-                        </div>
-                        <div class="form-control">{{ form.weight.label_tag }}{{ form.weight }}</div>
+                        
                         <div class="form-control md:col-span-3">
                             {{ form.distinguishing_marks.label_tag }}
                             {{ form.distinguishing_marks }}
                         </div>
+                    </div>
+                </div>
+    
+                <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">ขนาดตัว</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="form-control">
+                            {{ form.size.label }}
+                            {{ form.size }}
+                        </div>
+                        <span>
+                            <img src="{% static 'dogsizepng.png' %}">
+                        </span>
                     </div>
                 </div>
                 
@@ -157,13 +94,31 @@
                         <div class="form-control">{{ form.favorite_food.label_tag }}{{ form.favorite_food }}</div>
                         <div class="form-control">{{ form.allergies.label_tag }}{{ form.allergies }}</div>
                     </div>
+                </div>
+                <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">สถานะของสุนัข</h2>
                     <div class="form-control mt-4">
                         <label class="label cursor-pointer justify-start gap-3">
                             {{ form.is_lost }}
-                            <span class="label-text text-lg">{{ form.is_lost.label }} (หากสุนัขหายแล้ว)</span>
+                            {% comment %} <span class="label-text text-lg">{{ form.is_lost.label }}</span> {% endcomment %}
                         </label>
                     </div>
                 </div>
+                {% if is_org %}
+                    <h2 class="text-2xl font-bold text-gray-700 mt-8 mb-4 border-t pt-4">ข้อมูลสุขภาพและการจัดการ (สำหรับผู้ดูแล)</h2>
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">สถานะการควบคุมกำเนิด (ทำหมัน)</h2>
+                        <div class="form-control">{{ form.sterilization_status.label_tag }}{{ form.sterilization_status }}</div>
+                        <div class="form-control">{{ form.sterilization_date.label_tag }}{{ form.sterilization_date }}</div>
+                    </div>
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">วัคซีนที่ฉีดแล้ว</h2>
+                        <div class="form-control">{{ form.vaccine_selection.label_tag }}{{ form.vaccine_selection }}</div>
+                    </div>
+                {% endif %}
+
+
+
 
                 <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
                     <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">รูปภาพสุนัข (สูงสุด 5 รูป)</h2>
@@ -253,10 +208,10 @@
                         <p class="font-bold text-gray-700">อายุ:</p>
                         <p class="text-lg">{{ dog.age|default:"-" }} ปี</p>
                     </div>
-                    <div class="data-block">
+                    {% comment %} <div class="data-block">
                         <p class="font-bold text-gray-700">สายพันธุ์:</p>
                         <p class="text-lg">{{ dog.breed|default:"-" }}</p>
-                    </div>
+                    </div> {% endcomment %}
                     
                     <div class="data-block">
                         <p class="font-bold text-gray-700">สีหลัก/สีรอง:</p>
@@ -266,10 +221,10 @@
                         <p class="font-bold text-gray-700">ขนาด:</p>
                         <p class="text-lg">{{ size_display|default:"-" }}</p>
                     </div>
-                    <div class="data-block">
+                    {% comment %} <div class="data-block">
                         <p class="font-bold text-gray-700">น้ำหนัก:</p>
                         <p class="text-lg">{% if dog.weight %}{{ dog.weight }} กก.{% else %}-{% endif %}</p>
-                    </div>
+                    </div> {% endcomment %}
                     
                     <div class="md:col-span-2 data-block">
                         <p class="font-bold text-gray-700">ลักษณะ/รอยตำหนิเด่น:</p>
@@ -289,12 +244,36 @@
                             <p class="font-bold text-gray-700">อาหารที่แพ้ (Allergies):</p>
                             <div class="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border border-gray-200">{{ dog.allergies|default:"ไม่มี" }}</div>
                         </div>
+                        {%if dog.organization %}
+                            <div class="data-block">
+                                <p class="font-bold text-gray-700">ประวัติการทำหมัน:</p>
+                                <div class="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border border-gray-200">{{ sterilization_display|default:"ไม่มี" }}</div>
+                                {%if sterilization_display %}
+                                    <p class="font-bold text-gray-700">คุมกำเนิดครั้งล่าสุด:</p>
+                                    <div class="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border border-gray-200">{{ dog.sterilization_date|default:"ไม่มี" }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="data-block">
+                                <p class="font-bold text-gray-700">ประวัติการฉีดวัคซีน:</p>
+                                {% comment %} <div class="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border border-gray-200">{{ sterilization_display|default:"ไม่มี" }}</div> {% endcomment %}
+                                {% if vaccine_display_list %}
+                                    <ul>
+                                    {% for vaccine in vaccine_display_list %}
+                                        <li>✅ {{ vaccine }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-gray-500">— ไม่มีข้อมูลวัคซีนที่บันทึกไว้ —</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        {% comment %}  {% endcomment %}
                     </div>
                 </div>
             </div>
             
             <div class="mt-8 text-right">
-                {% if not is_edit_mode %}
+                {% if not is_edit_mode and can_edit %}
                 <div class="flex gap-2">
                     <a href="{% url 'dog_detail' dog.id %}?edit=true" class="btn btn-warning text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -341,76 +320,22 @@
     
     {% if is_edit_mode %}
     {% block extra_scripts %}
+    <!-- Dropzone Custom JS -->
+    <script src="{% static 'dropzone-custom.js' %}"></script>
     <script>
-    // รอให้ Dropzone โหลดเสร็จก่อน
-    function initDropzoneEdit() {
-        if (typeof Dropzone === 'undefined') {
-            console.error('Dropzone.js is not loaded');
-            setTimeout(initDropzoneEdit, 100);
-            return;
-        }
-        
-        // ปิดการใช้งาน auto-discover ของ Dropzone
-        Dropzone.autoDiscover = false;
-        
-        // ตรวจสอบว่า element มีอยู่จริง
-        const dropzoneElement = document.getElementById('dropzone-area');
-        if (!dropzoneElement) {
-            console.error('Dropzone element not found');
-            return;
-        }
-        
-        // เก็บไฟล์ที่อัพโหลดใหม่
-        let uploadedFiles = [];
-        const maxFiles = 5;
-        let existingImagesCount = {{ dog_images.count|default:0 }};
-        
-        // สร้าง Dropzone instance
-        const dropzone = new Dropzone("#dropzone-area", {
-            url: "#",
-            autoProcessQueue: false,
-            addRemoveLinks: false,
-            maxFiles: maxFiles,
-            acceptedFiles: "image/*",
-            dictDefaultMessage: "",
-            dictMaxFilesExceeded: `คุณสามารถอัพโหลดได้สูงสุด ${maxFiles} รูป`,
-            clickable: true,
-            init: function() {
-                const dz = this;
-                console.log('Dropzone initialized for edit mode');
-                
-                // เมื่อเพิ่มไฟล์
-                dz.on("addedfile", function(file) {
-                    console.log('File added:', file.name);
-                    const totalFiles = uploadedFiles.length + existingImagesCount;
-                    if (totalFiles >= maxFiles) {
-                        dz.removeFile(file);
-                        alert(`คุณสามารถอัพโหลดได้สูงสุด ${maxFiles} รูป`);
-                        return;
-                    }
-                    
-                    uploadedFiles.push(file);
-                    updateFormset();
-                    updatePreview();
-                });
-                
-                // เมื่อลบไฟล์
-                dz.on("removedfile", function(file) {
-                    console.log('File removed:', file.name);
-                    uploadedFiles = uploadedFiles.filter(f => f !== file);
-                    updateFormset();
-                    updatePreview();
-                });
-                
-                // เมื่อมี error
-                dz.on("error", function(file, message) {
-                    console.error('Dropzone error:', message);
-                    alert('เกิดข้อผิดพลาด: ' + message);
-                });
-            }
-        });
-        
-        // จัดการการลบรูปภาพเดิม
+    // เรียกใช้ Dropzone Formset Handler สำหรับโหมดแก้ไข
+    const dropzone = initDropzoneFormset({
+        dropzoneId: 'dropzone-area',
+        formsetContainerId: 'formset-container',
+        formsetFormsId: 'formset-forms',
+        previewContainerId: 'image-preview',
+        formId: 'dog-edit-form',
+        maxFiles: 5,
+        existingImagesCount: {{ dog_images.count|default:0 }}
+    });
+    
+    // จัดการการลบรูปภาพเดิม (ถ้ามี)
+    if (dropzone) {
         document.querySelectorAll('.remove-existing-image').forEach(btn => {
             btn.addEventListener('click', function() {
                 const imageItem = this.closest('.existing-image-item');
@@ -419,92 +344,13 @@
                     deleteCheckbox.checked = true;
                     imageItem.style.opacity = '0.5';
                     imageItem.style.pointerEvents = 'none';
-                    existingImagesCount--;
+                    // อัพเดต formset อีกครั้งหลังจากลบรูปเดิม
+                    if (dropzone.updateFormset) {
+                        dropzone.updateFormset();
+                    }
                 }
             });
         });
-        
-        // อัพเดต FormSet สำหรับรูปใหม่
-        function updateFormset() {
-            const formsetContainer = document.getElementById('formset-container');
-            const formsetForms = document.getElementById('formset-forms');
-            const managementForm = formsetContainer.querySelector('[name$="-TOTAL_FORMS"]');
-            
-            // นับรูปเดิมที่ไม่ถูกลบ
-            const existingNotDeleted = document.querySelectorAll('.existing-image-item input[type="checkbox"][name$="-DELETE"]:not(:checked)').length;
-            
-            // ล้าง formset forms สำหรับรูปใหม่
-            formsetForms.innerHTML = '';
-            
-            // สร้าง form สำหรับแต่ละไฟล์ใหม่
-            uploadedFiles.forEach((file, index) => {
-                const formIndex = existingNotDeleted + index;
-                const formDiv = document.createElement('div');
-                formDiv.innerHTML = `
-                    <input type="file" name="images-${formIndex}-image" id="id_images-${formIndex}-image" style="display: none;">
-                `;
-                formsetForms.appendChild(formDiv);
-                
-                // ใส่ไฟล์เข้าไปใน input
-                const fileInput = formDiv.querySelector('input[type="file"]');
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInput.files = dataTransfer.files;
-            });
-            
-            // อัพเดต TOTAL_FORMS
-            if (managementForm) {
-                managementForm.value = existingNotDeleted + uploadedFiles.length;
-            }
-        }
-        
-        // อัพเดต Preview สำหรับรูปใหม่
-        function updatePreview() {
-            const previewContainer = document.getElementById('image-preview');
-            previewContainer.innerHTML = '';
-            
-            if (uploadedFiles.length > 0) {
-                const title = document.createElement('h3');
-                title.className = 'text-md font-semibold text-gray-700 mb-2 col-span-full';
-                title.textContent = 'รูปภาพใหม่:';
-                previewContainer.appendChild(title);
-            }
-            
-            uploadedFiles.forEach((file, index) => {
-                const previewDiv = document.createElement('div');
-                previewDiv.className = 'relative';
-                
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                img.className = 'w-full h-32 object-cover rounded-md border';
-                img.alt = `Preview ${index + 1}`;
-                
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600';
-                removeBtn.innerHTML = '×';
-                removeBtn.onclick = function() {
-                    dropzone.removeFile(file);
-                };
-                
-                previewDiv.appendChild(img);
-                previewDiv.appendChild(removeBtn);
-                previewContainer.appendChild(previewDiv);
-            });
-        }
-        
-        // เมื่อ submit form
-        document.getElementById('dog-edit-form').addEventListener('submit', function(e) {
-            // อัพเดต formset ก่อน submit
-            updateFormset();
-        });
-    }
-    
-    // เริ่มต้นเมื่อ DOM พร้อม
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDropzoneEdit);
-    } else {
-        initDropzoneEdit();
     }
     </script>
     {% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}แดชบอร์ดผู้ดูแลองค์กร{% endblock %} 
+
+{% block content %}
+    <div class="max-w-7xl mx-auto p-8">
+        
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-8">
+            <span class="text-secondary-gray-custom">🛡️</span> แดชบอร์ดผู้ดูแลองค์กร
+        </h1>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="card bg-blue-600 text-white shadow-xl">
+                <div class="card-body p-4 flex-row items-center">
+                    <span class="text-4xl">🐕</span>
+                    <div class="ml-4">
+                        <h2 class="card-title text-3xl">{{dogs_org_count}}</h2>
+                        <p class="text-sm">สุนัขทั้งหมดในโฮงเกลือหมา</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% comment %} <div class="card bg-green-600 text-white shadow-xl">
+                <div class="card-body p-4 flex-row items-center">
+                    <span class="text-4xl">🏠</span>
+                    <div class="ml-4">
+                        <h2 class="card-title text-3xl">12</h2>
+                        <p class="text-sm">รอการรับเลี้ยง</p>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+
+            <div class="card bg-red-600 text-white shadow-xl">
+                <div class="card-body p-4 flex-row items-center">
+                    <span class="text-4xl">🚨</span>
+                    <div class="ml-4">
+                        <h2 class="card-title text-3xl">{{ dogs_lost_count }}</h2>
+                        <p class="text-sm">สุนัขที่สูญหาย</p>
+                    </div>
+                </div>
+            </div>
+{% comment %} 
+            <div class="card bg-purple-600 text-white shadow-xl">
+                <div class="card-body p-4 flex-row items-center">
+                    <span class="text-4xl">💌</span>
+                    <div class="ml-4">
+                        <h2 class="card-title text-3xl">0</h2>
+                        <p class="text-sm">คำขอการเป็นพ่อแม่บุญธรรม</p>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-700 mb-6">เมนูใช้งานด่วน</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            
+            <a href="{% url 'register_dog_page' %}" class="card bg-white shadow-xl border border-green-500 hover:bg-green-50 transition duration-200">
+                <div class="card-body items-center text-center p-6">
+                    <span class="text-5xl text-green-600">➕</span>
+                    <h3 class="font-bold text-xl mt-2 text-green-700">ลงทะเบียนสุนัของค์กร</h3>
+                    <p class="text-sm text-gray-500">เพิ่มสุนัขใหม่เข้าสู่บัญชีดูแลขององค์กร</p>
+                </div>
+            </a>
+
+            {% comment %} <a href="" class="card bg-white shadow-xl border border-purple-500 hover:bg-purple-50 transition duration-200">
+                <div class="card-body items-center text-center p-6">
+                    <span class="text-5xl text-purple-600">📑</span>
+                    <h3 class="font-bold text-xl mt-2 text-purple-700">จัดการการรับเลี้ยง</h3>
+                    <p class="text-sm text-gray-500">ตรวจสอบและอนุมัติคำขอรับเลี้ยง</p>
+                </div>
+            </a> {% endcomment %}
+
+            <a href="{% url 'create_notification' %}" class="card bg-white shadow-xl border border-orange-500 hover:bg-orange-50 transition duration-200">
+                <div class="card-body items-center text-center p-6">
+                    <span class="text-5xl text-orange-600">📢</span>
+                    <h3 class="font-bold text-xl mt-2 text-orange-700">ประกาศข่าวสาร</h3>
+                    <p class="text-sm text-gray-500">ประการข่าวสารต่างๆหรืออัพเดตสถานะสุนัข</p>
+                </div>
+            </a>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">สุนัขที่อยู่ในการดูแลล่าสุด</h2>
+
+        <div class="bg-white shadow-xl rounded-lg p-6">
+            
+            <div class="flex justify-between mb-4">
+                <div class="flex space-x-2">
+                    <select class="select select-bordered select-sm">
+                        <option selected>สถานะทั้งหมด</option>
+                        <option>รอรับเลี้ยง</option>
+                        <option>ได้รับการรับเลี้ยง</option>
+                        <option>อยู่ระหว่างรักษา</option>
+                    </select>
+                    <input type="text" placeholder="ค้นหาชื่อ, รหัส..." class="input input-bordered input-sm w-full max-w-xs" />
+                </div>
+                <a href="{% url 'dog_list' %}" class="btn btn-sm btn-outline btn-primary">ดูทั้งหมด →</a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="table w-full">
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>ชื่อ</th>
+                            <th>อายุ</th>
+                            <th>สถานะการสูญหาย</th>
+                            <th>ขนาดตัว</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dog in dogs_org %}
+                        <tr>
+                            <td>#{{ dog.id }}</td>
+                            <td>{{ dog.name }}</td>
+                            <td>{{ dog.age }} ปี</td>
+                            <td><span class="badge badge-success">{% if dog.is_lost %}สูญหาย{% else %}ปกติ{% endif %}</span></td>
+                            <td>{{ dog.size }}</td>
+                            <td><a href="{% url 'dog_detail' dog.id %}" class="btn btn-xs btn-info">ดู/แก้ไข</a></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
