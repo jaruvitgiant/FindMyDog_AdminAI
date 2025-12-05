@@ -93,11 +93,6 @@
                                    :class="{'bg-blue-50 text-blue-700': activeSection === 'auto-schedule'}">
                                     Set auto training schedule
                                 </a>
-                                <a href="#" @click="activeSection = 'logging'" 
-                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
-                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'logging'}">
-                                    Logging
-                                </a>
                                 <a href="{% url 'page_training'%}" @click="activeSection = 'training-alerts'" 
                                    class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
                                    :class="{'bg-blue-50 text-blue-700': activeSection === 'training-alerts'}">

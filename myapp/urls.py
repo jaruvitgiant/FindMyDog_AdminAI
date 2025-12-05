@@ -22,13 +22,13 @@ urlpatterns = [
     path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'),
     
     # Admin Training Routes
-    path('admin_page/', PMai_views.admin_page, name='admin_page'),
+    path('admin_page/', views.admin_page, name='admin_page'),
     path('page_training/', PMai_views.page_training, name='page_training'),
     path('SetautoTraining/', PMai_views.set_auto_training, name='set_auto_training'),
-    
-    # Training API Routes
-    path('train-model/', PMai_views.start_training, name='start_training'),
-    path('training-details/<int:training_id>/', PMai_views.training_details, name='training_details'),
-    path('training_status/<int:training_id>/', PMai_views.training_status, name='training_status'),
-    path('training_list/', PMai_views.training_list, name='training_list'),
+
+    #training
+    path('start-training/', PMai_views.start_training, name='start_training'),
+    path('train_model/', PMai_views.train_resnet18, name='train_model'),
+
+
 ]

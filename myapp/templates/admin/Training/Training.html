@@ -1,0 +1,151 @@
+{% extends 'admin/baseAI.html' %}
+
+{% block title %}
+Training
+{% endblock %}
+
+{% block content %}
+<div class="p-6 bg-gray-50 min-h-screen">
+    <h1 class="text-2xl font-semibold text-gray-900 mb-6">Training</h1>
+
+    <div x-data="{
+        trainingProgress: 30, // 0 to 100 for progress bar
+        accuracy: 0,
+        pause: false,
+        documentsUsedSteps: [0, 10, 30, 70, 200, 500, 1000]
+    }" class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center">
+                <h2 class="text-xl font-medium text-gray-700 mr-2">Automatic training</h2>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="relative pt-1">
+                <div class="flex items-center justify-between h-2 mb-1">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full bg-blue-600" :style="`width: ${trainingProgress}%;`"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 font-medium -mt-2">
+                    <template x-for="(docCount, index) in documentsUsedSteps" :key="index">
+                        <div :class="{
+                            'text-blue-600 font-semibold': (trainingProgress / 100) * 100 >= (index / (documentsUsedSteps.length - 1)) * 100,
+                            'relative -top-2': index === 0 || index === (documentsUsedSteps.length - 1)
+                        }" class="text-center w-1/7">
+                            <span x-text="docCount"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Models</h2>
+    <div x-data="{ showTrainingModal: false }">
+
+        <!-- ปุ่มเปิด modal -->
+        <button 
+            @click="showTrainingModal = true"
+            class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150">
+            New train
+        </button>
+
+        <!-- Popup Modal -->
+        <div 
+            x-show="showTrainingModal"
+            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+            style="display: none;">
+
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+
+                <h2 class="text-xl font-bold mb-4">Create New Training</h2>
+
+                <form method="POST" action="{% url 'start_training'%}">
+                    {% csrf_token %}
+
+                    <!-- Training Name -->
+                    <label class="block mb-2 font-semibold">Training Name</label>
+                    <input name="training_name" class="w-full border rounded px-3 py-2 mb-4" placeholder="Enter training name" required>
+
+                    <!-- Select Model -->
+                    <label class="block mb-2 font-semibold">Select Model</label>
+                    <select name="model_type" class="w-full border rounded px-3 py-2 mb-4" required>
+                        <option value="" disabled selected>Select model</option>
+                        <option value="resnet18">ResNet18</option>
+                        <option value="resnet50">ResNet50</option>
+                    </select>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button 
+                            @click="showTrainingModal = false"
+                            type="button"
+                            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Start Training
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto mt-6">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead class="bg-gray-100 border-b border-gray-300">
+                <tr>
+                    <th class="px-4 py-3 text-left font-semibold">Training Name</th>
+                    <th class="px-4 py-3 text-left font-semibold"> accuracy</th>
+                    <th class="px-4 py-3 text-left font-semibold">Dataset Count</th>
+                    <th class="px-4 py-3 text-left font-semibold">Model Name</th>
+                    <th class="px-4 py-3 text-left font-semibold">Created At</th>
+                    <th class="px-4 py-3 text-left font-semibold">Status</th>
+                    <th class="px-4 py-3 text-left font-semibold"> manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sessions %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">{{ s.training_name }}</td>
+                    <td class="px-4 py-3">--/-</td>
+                    <td class="px-4 py-3">{{ img_nun_em}} file</td>
+                    <td class="px-4 py-3">{{ s.model_name }}</td>
+                    <td class="px-4 py-3">{{ s.data_added|date:"Y-m-d H:i" }}</td>
+
+                    <td class="px-4 py-3">
+                        {% if s.status == "completed" %}
+                            <span class="px-3 py-1 bg-green-200 text-green-700 rounded-lg text-sm font-semibold">Completed</span>
+                        {% elif s.status == "training" %}
+                            <span class="px-3 py-1 bg-yellow-200 text-yellow-700 rounded-lg text-sm font-semibold">Training</span>
+                        {% elif s.status == "failed" %}
+                            <span class="px-3 py-1 bg-red-200 text-red-700 rounded-lg text-sm font-semibold">Failed</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold">{{ s.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="#" class="text-blue-600 hover:underline">Delete</a>
+                        <a href="" class="text-green-600 hover:underline" >test performane model</a>
+
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-3 text-center text-gray-500">
+                        No training records found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
