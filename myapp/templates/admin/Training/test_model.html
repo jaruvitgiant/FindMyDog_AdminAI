@@ -1,0 +1,171 @@
+{% extends 'admin/baseAI.html' %}
+
+{% block title %}Test Model Performance{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto" x-data="testModel()">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Model Performance — Test</h1>
+    <div class="flex gap-2">
+      <button @click="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Refresh</button>
+      <button @click="runEvaluation()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Run Evaluation</button>
+    </div>
+  </div>
+
+    <!-- Model Info Bar -->
+    <div class="bg-white p-4 rounded shadow-sm mb-6" 
+        x-data="{
+            trainingName: '{{ training_name }}',
+            modelName: '{{ model_name }}',
+            createdAt: '{{ created_at }}',
+            modelId: '{{ model_id }}'
+        }">
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex gap-6 items-center">
+                <div>
+                    <div class="text-xs text-gray-500">Training Name</div>
+                    <div class="text-sm font-medium" x-text="trainingName"></div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500">Model Name</div>
+                    <div class="text-sm font-medium" x-text="modelName"></div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500">Created At</div>
+                    <div class="text-sm font-medium" x-text="createdAt"></div>
+                </div>
+            </div>
+
+            <div class="text-sm text-gray-500">
+                ID : <span x-text="modelId"></span>
+            </div>
+        </div>
+    </div>
+
+
+  <!-- Section 1: Summary -->
+  <section class="mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <template x-for="(card, idx) in summaryCards" :key="idx">
+        <div class="bg-white p-4 rounded shadow-sm">
+          <div class="text-sm text-gray-500" x-text="card.label"></div>
+          <div class="mt-2 text-2xl font-bold" x-text="card.value"></div>
+          <div class="text-xs text-gray-400 mt-1" x-text="card.meta"></div>
+        </div>
+      </template>
+    </div>
+  </section>
+
+  <!-- Section 2: Plots -->
+  <section class="mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-medium">Confusion Matrix (Heatmap)</h2>
+          <div class="text-sm text-gray-500">Interactive</div>
+        </div>
+        <div class="mt-4 h-72 flex items-center justify-center border-2 border-dashed border-gray-200 rounded">
+          <!-- Placeholder for heatmap; integrate with charting library later -->
+          <div class="text-gray-400">Heatmap placeholder (use Chart.js / Plotly)</div>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-medium">Embedding Visualization (PCA 2D)</h2>
+          <div class="text-sm text-gray-500">Interactive</div>
+        </div>
+        <div class="mt-4 h-72 flex items-center justify-center border-2 border-dashed border-gray-200 rounded">
+          <div class="text-gray-400">PCA 2D placeholder (use Plotly / Vega)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Nearest Neighbor Search -->
+  <section class="mb-8">
+    <div class="bg-white p-4 rounded shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium">Nearest Neighbor Search (Test images)</h2>
+        <div class="text-sm text-gray-500">Top-5 nearest embeddings</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+        <div>
+          <div class="h-64 w-full bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+            <img :src="queryImage || staticPlaceholder" alt="query" class="object-cover h-full w-full"/>
+          </div>
+
+          <div class="mt-3 flex gap-2">
+            <input type="file" accept="image/*" @change="onQueryUpload($event)" class="text-sm" />
+            <button @click="searchNeighbors()" class="px-3 py-2 bg-indigo-600 text-white rounded">Search</button>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <template x-for="n in neighbors" :key="n.id">
+              <div class="text-center">
+                <div class="h-28 w-full bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                  <img :src="n.src" alt="nn" class="object-cover h-full w-full"/>
+                </div>
+                <div class="mt-1 text-xs text-gray-600" x-text="n.distance"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+function testModel(){
+  return {
+    staticPlaceholder: '#', 
+    queryImage: null,
+    // Model info (replace with real data from backend)
+    trainingName: 'Default Training',
+    modelName: 'resnet18_v1',
+    createdAt: '2025-12-01 10:23',
+    modelId: 'model_001',
+    summaryCards: [
+      { label: 'Accuracy', value: '--%', meta: '' },
+      { label: 'Silhouette Score', value: '--', meta: '' },
+      { label: 'KMeans Cluster Count', value: '--', meta: '' },
+      { label: 'Dataset Count', value: '--- images', meta: '' },
+    ],
+    clusters: Array.from({length:10}).map((_,i)=>({ id: i+1, count: Math.floor(Math.random()*500), silhouette: (Math.random()*0.5+0.3).toFixed(2), representative: 'https://place-puppy.com/80x80' })),
+    misclassified: Array.from({length:8}).map((_,i)=>({ id:i, src: 'https://place-puppy.com/200x200', true_label: 'dog_A', pred_label: 'dog_B' })),
+    neighbors: Array.from({length:5}).map((_,i)=>({ id:i, src: 'https://place-puppy.com/100x100', distance: (Math.random()).toFixed(4) })),
+
+    refresh(){
+      // placeholder to trigger UI refresh; replace with AJAX fetch
+      this.summaryCards[0].value = this.summaryCards[0].value;
+    },
+
+    runEvaluation(){
+      alert('Run evaluation on backend endpoint (implement view to handle)');
+    },
+
+    onQueryUpload(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { this.queryImage = reader.result; };
+      reader.readAsDataURL(file);
+    },
+
+    searchNeighbors(){
+      // send `this.queryImage` via fetch/htmx to backend to compute neighbors
+      alert('Search neighbors — implement backend to return neighbors');
+    }
+  }
+}
+</script>
+
+{% endblock %}

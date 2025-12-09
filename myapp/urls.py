@@ -25,10 +25,17 @@ urlpatterns = [
     path('admin_page/', views.admin_page, name='admin_page'),
     path('page_training/', PMai_views.page_training, name='page_training'),
     path('SetautoTraining/', PMai_views.set_auto_training, name='set_auto_training'),
+    path('test-model-performance/<int:model_id>/', PMai_views.test_model_performance, name='test_model_performance'),
+
 
     #training
     path('start-training/', PMai_views.start_training, name='start_training'),
     path('train_model/', PMai_views.train_resnet18, name='train_model'),
+    path('delete-training/<int:session_id>/', PMai_views.delete_training_session, name='delete_training'),
+
+    #test
+    path('test-model-performance/<int:model_id>/', PMai_views.Knn_test, name='test_model_performance'),
+
 
 
 ]

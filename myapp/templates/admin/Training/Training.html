@@ -131,9 +131,16 @@ Training
                         {% endif %}
                     </td>
                     <td>
-                        <a href="#" class="text-blue-600 hover:underline">Delete</a>
-                        <a href="" class="text-green-600 hover:underline" >test performane model</a>
-
+                        <!-- <a href="#" class="text-blue-600 hover:underline">Delete</a> -->
+                         <a href="{% url 'delete_training' s.id %}" 
+                            class="text-red-600 hover:underline"
+                            onclick="return confirm('Delete this training?');">
+                            Delete
+                        </a>
+                        <a href="{% url 'test_model_performance' s.id %}"
+                            class="text-green-600 hover:underline">
+                            test performance model
+                        </a>
                     </td>
                 </tr>
                 {% empty %}

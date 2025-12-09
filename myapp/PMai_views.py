@@ -29,7 +29,7 @@ def page_training(request):
     return render(request, "admin/Training/Training.html", context)
 
 def set_auto_training(request):
-    pass
+    return render(request, 'admin/Training/SetautoTraining.html')
 
 
 # def start_training(request):
@@ -90,3 +90,28 @@ def start_training(request):
         return redirect('page_training')
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+from django.contrib import messages
+def delete_training_session(request, session_id):
+    session = get_object_or_404(TrainingSession, id=session_id)
+    session.delete()
+    messages.success(request, "Training session deleted successfully.")
+    return redirect('page_training')
+
+# def test_model_performance(request):
+#     return render(request, 'admin/Training/test_model.html')
+
+def test_model_performance(request, model_id):
+    model_data = get_object_or_404(TrainingSession, id=model_id)
+
+    context = {
+        "training_name": model_data.training_name,
+        "model_name": model_data.model_name,
+        "created_at": model_data.data_added.strftime("%Y-%m-%d %H:%M"),
+        "model_id": model_data.id,
+    }
+
+    return render(request, "admin/Training/test_model.html", context)
+
+def Knn_test(request, model_id):
+    pass

@@ -87,36 +87,3 @@ def train_resnet18():
 
     return True
 
-# def train_resnet18(session):
-#     model = model_EMResnet18()
-#     model.eval()
-
-#     # เลือกเฉพาะภาพที่ยังไม่เคยฝัง embedding
-#     all_images = DogImage.objects.filter(
-#         embedding_binary__isnull=True
-#     )
-
-#     count = 0
-
-#     with torch.no_grad():
-#         for img_obj in all_images:
-
-#             img_path = img_obj.image.path
-#             img = Image.open(img_path).convert("RGB")
-#             img_tensor = transform(img).unsqueeze(0)
-
-#             embedding = model(img_tensor)
-#             save_embedding_to_db(img_obj, embedding)
-
-#             # ผูกภาพนี้เข้ากับ TrainingSession นี้
-#             img_obj.training_session = session
-#             img_obj.save()
-
-#             count += 1
-
-#     # บันทึกจำนวน embedding ที่สกัดได้
-#     session.processed_files = count
-#     session.save()
-
-#     return True
-
