@@ -18,15 +18,21 @@ logger = logging.getLogger(__name__)
 #     return render(request, 'admin/base.html')
 
 def page_training(request):
-    # ดึงข้อมูล TrainingSession ทั้งหมด (เรียงล่าสุดก่อน ตาม ordering ใน model)
     sessions = TrainingSession.objects.all()
-    img_nun_em = DogImage.objects.filter(embedding_binary__isnull=True).count()
+
+    images_no_embedding = DogImage.objects.filter(
+        embedding_binary__isnull=True
+    )
+
+    dataset_count = images_no_embedding.count()
+
     context = {
         "sessions": sessions,
-        "img_nun_em": img_nun_em
+        "dataset_count": dataset_count,
     }
 
     return render(request, "admin/Training/Training.html", context)
+
 
 def set_auto_training(request):
     return render(request, 'admin/Training/SetautoTraining.html')
@@ -63,15 +69,15 @@ def start_training(request):
             training_name=training_name,
             model_name=model_type,
             status="training",
-            data_added=timezone.now(), 
-            img_files = DogImage.objects.all().count(),
+            data_added=timezone.now(),
+            img_files=DogImage.objects.filter(embedding_binary__isnull=True).count(),
             model_version="v1.0",
             
         )
 
         try:
             if model_type == "resnet18":
-                train_resnet18()
+                train_resnet18(session)
 
             elif model_type == "resnet50":
                 train_resnet50()
@@ -94,6 +100,12 @@ def start_training(request):
 from django.contrib import messages
 def delete_training_session(request, session_id):
     session = get_object_or_404(TrainingSession, id=session_id)
+    DogImage.objects.filter(
+        training_session=session
+    ).update(
+        embedding_binary=None,
+        training_session=None   # แนะนำให้ reset ด้วย
+    )
     session.delete()
     messages.success(request, "Training session deleted successfully.")
     return redirect('page_training')
