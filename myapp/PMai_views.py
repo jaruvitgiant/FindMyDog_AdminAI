@@ -7,10 +7,11 @@ from PIL import Image
 import numpy as np
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
-from myapp.models import Dog, DogImage
+from myapp.models import Dog, DogImage,EvaluationResult
 import logging
 from scripts.train_model import train_resnet18, train_resnet50
 from .models import TrainingSession
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,15 +116,130 @@ def delete_training_session(request, session_id):
 
 def test_model_performance(request, model_id):
     model_data = get_object_or_404(TrainingSession, id=model_id)
+    all_images = model_data.images.all()
+    all_images_count = all_images.count()
+    print("IMAGE COUNT =", all_images_count)
 
     context = {
         "training_name": model_data.training_name,
         "model_name": model_data.model_name,
         "created_at": model_data.data_added.strftime("%Y-%m-%d %H:%M"),
         "model_id": model_data.id,
+        "all_images_count": all_images_count,
     }
 
     return render(request, "admin/Training/test_model.html", context)
 
-def Knn_test(request, model_id):
-    pass
+# from django.shortcuts import get_object_or_404
+# from django.http import JsonResponse
+from django.conf import settings
+# from django.core.files import File
+
+# from .models import TrainingSession, DogImage, EvaluationResult
+from scripts.Test_model.utils import load_embeddings_from_images
+from scripts.Test_model.Test_KNN import run_knn
+# from scripts.Test_model.Test_TSNE import run_tsne
+
+from sklearn.model_selection import train_test_split
+from django.http import HttpResponse
+
+# import osponse
+
+import numpy as np
+import pickle
+import matplotlib
+matplotlib.use("Agg")
+
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.metrics import confusion_matrix
+from scripts.Test_model.Test_KNN import fit_model_knn, save_plot_to_evaluation
+
+def knn_test(request, model_id):
+    session = get_object_or_404(TrainingSession, id=model_id)
+    all_images = session.images.all()
+    print(f"DEBUG: Found {all_images.count()} images total in session {model_id}")
+    EMBED_DIM = 512
+    all_features = []
+    all_labels = []
+
+
+    for img in all_images:
+        if not img.embedding_binary:
+            continue
+
+        try:
+            emb = np.frombuffer(
+                img.embedding_binary,
+                dtype=np.float32
+            )
+
+            if emb.size != EMBED_DIM:
+                print(f"Image {img.id}: invalid dim {emb.size}")
+                continue
+
+            all_features.append(emb)
+            #all_labels.append(img.id)
+            all_labels.append(img.dog.id)
+
+        except Exception as e:
+            print(f"Error decoding embedding for image {img.id}: {e}")
+    # 3. เตรียมข้อมูล KNN (Scikit-learn)
+    if not all_features:
+        # ตรวจสอบว่าตกลงมีรูปไหม หรือมีแต่ไม่มีข้อมูล vector
+        if all_images.count() == 0:
+            return HttpResponse(f"Error: No images linked to session {model_id}")
+        else:
+            return HttpResponse(f"Error: Found {all_images.count()} images, but all have NULL embedding_binary")
+
+    if all_features:
+        X = np.array(all_features)
+        y = np.array(all_labels)
+        
+        print(f"Data ready: {len(X)} samples")
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, 
+            y,
+            test_size=0.5,       
+            random_state=42,
+            stratify=y    
+        )
+        y_pred = fit_model_knn(X_train, y_train, X_test)
+        # print("Train size:", X_train.shape)
+        # print("Test size:", X_test.shape)
+
+        # accuracy
+        accuracy = (y_pred == y_test).mean()
+
+        # confusion matrix
+        cm = confusion_matrix(y_test, y_pred)
+
+        # ====== CREATE FIGURE ======
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+        ax.set_xlabel("Predicted labels")
+        ax.set_ylabel("True labels")
+        ax.set_title("Confusion Matrix (KNN)")
+
+        # ====== CALL HELPER ======
+        evaluation = save_plot_to_evaluation(
+            training_session=session,
+            fig=fig,
+            eval_type="knn",
+            score=accuracy
+        )
+
+        return HttpResponse(f"Loaded {len(X)} images with labels. acc{accuracy:.4f}")
+    else:
+        return HttpResponse("No images with embeddings found in this session.")
+
+
+def TSNE_test(request,model_id):
+    print("ENTER TSNE_test")
+
+

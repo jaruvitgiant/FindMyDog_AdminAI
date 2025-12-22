@@ -10,40 +10,104 @@
     <h1 class="text-2xl font-semibold">Model Performance — Test</h1>
     <div class="flex gap-2">
       <button @click="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Refresh</button>
-      <button @click="runEvaluation()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Run Evaluation</button>
+      <button  command="show-modal" commandfor="dialog" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+        Run Evaluation
+      </button>
+      <el-dialog x-data="{ loading: false }">
+        <dialog id="dialog" aria-labelledby="dialog-title"
+          class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
+
+          <el-dialog-backdrop class="fixed inset-0 bg-gray-900/50 transition-opacity">
+          </el-dialog-backdrop>
+
+          <div tabindex="0" class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+
+            <el-dialog-panel
+              class="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg">
+
+              <!-- CONTENT -->
+              <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div
+                    class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:size-10">
+                    <svg class="size-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                  </div>
+
+                  <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 id="dialog-title" class="text-base font-semibold text-white">
+                      Test performance
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-400">
+                      This will evaluate the model using KNN and t-SNE and save the results.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACTIONS -->
+              <div class="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+
+                <!-- ACTIVATE -->
+                <form method="POST" action="{% url 'knn_test' model_id %}">
+                  {% csrf_token %}
+                  <button type="submit"
+                    class="mt-3 inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 sm:mt-0 sm:w-auto">
+                    Activate
+                  </button>
+                </form>
+
+
+                <!-- CANCEL -->
+                <button type="button" command="close" commandfor="dialog"
+                  class="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20 sm:mt-0 sm:w-auto">
+                  Cancel
+                </button>
+
+              </div>
+            </el-dialog-panel>
+          </div>
+        </dialog>
+      </el-dialog>
     </div>
   </div>
 
-    <!-- Model Info Bar -->
-    <div class="bg-white p-4 rounded shadow-sm mb-6" 
-        x-data="{
+  <!-- Model Info Bar -->
+  <div class="bg-white p-4 rounded shadow-sm mb-6" x-data="{
             trainingName: '{{ training_name }}',
             modelName: '{{ model_name }}',
             createdAt: '{{ created_at }}',
-            modelId: '{{ model_id }}'
+            modelId: '{{ model_id }}',
+            allImagesCount: '{{ all_images_count }}'
         }">
 
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex gap-6 items-center">
-                <div>
-                    <div class="text-xs text-gray-500">Training Name</div>
-                    <div class="text-sm font-medium" x-text="trainingName"></div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-500">Model Name</div>
-                    <div class="text-sm font-medium" x-text="modelName"></div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-500">Created At</div>
-                    <div class="text-sm font-medium" x-text="createdAt"></div>
-                </div>
-            </div>
-
-            <div class="text-sm text-gray-500">
-                ID : <span x-text="modelId"></span>
-            </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex gap-6 items-center">
+        <div>
+          <div class="text-xs text-gray-500">Training Name</div>
+          <div class="text-sm font-medium" x-text="trainingName"></div>
         </div>
+        <div>
+          <div class="text-xs text-gray-500">Model Name</div>
+          <div class="text-sm font-medium" x-text="modelName"></div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">Created At</div>
+          <div class="text-sm font-medium" x-text="createdAt"></div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">Total Images</div>
+          <div class="text-sm font-medium" x-text="allImagesCount"></div>
+      </div>
+
+      <div class="text-sm text-gray-500">
+        ID : <span x-text="modelId"></span>
+      </div>
     </div>
+  </div>
 
 
   <!-- Section 1: Summary -->
@@ -96,7 +160,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
         <div>
           <div class="h-64 w-full bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-            <img :src="queryImage || staticPlaceholder" alt="query" class="object-cover h-full w-full"/>
+            <img :src="queryImage || staticPlaceholder" alt="query" class="object-cover h-full w-full" />
           </div>
 
           <div class="mt-3 flex gap-2">
@@ -110,7 +174,7 @@
             <template x-for="n in neighbors" :key="n.id">
               <div class="text-center">
                 <div class="h-28 w-full bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                  <img :src="n.src" alt="nn" class="object-cover h-full w-full"/>
+                  <img :src="n.src" alt="nn" class="object-cover h-full w-full" />
                 </div>
                 <div class="mt-1 text-xs text-gray-600" x-text="n.distance"></div>
               </div>
@@ -122,50 +186,55 @@
   </section>
 
 </div>
-
 <script>
-function testModel(){
-  return {
-    staticPlaceholder: '#', 
-    queryImage: null,
-    // Model info (replace with real data from backend)
-    trainingName: 'Default Training',
-    modelName: 'resnet18_v1',
-    createdAt: '2025-12-01 10:23',
-    modelId: 'model_001',
-    summaryCards: [
-      { label: 'Accuracy', value: '--%', meta: '' },
-      { label: 'Silhouette Score', value: '--', meta: '' },
-      { label: 'KMeans Cluster Count', value: '--', meta: '' },
-      { label: 'Dataset Count', value: '--- images', meta: '' },
-    ],
-    clusters: Array.from({length:10}).map((_,i)=>({ id: i+1, count: Math.floor(Math.random()*500), silhouette: (Math.random()*0.5+0.3).toFixed(2), representative: 'https://place-puppy.com/80x80' })),
-    misclassified: Array.from({length:8}).map((_,i)=>({ id:i, src: 'https://place-puppy.com/200x200', true_label: 'dog_A', pred_label: 'dog_B' })),
-    neighbors: Array.from({length:5}).map((_,i)=>({ id:i, src: 'https://place-puppy.com/100x100', distance: (Math.random()).toFixed(4) })),
+  document.getElementById('activate-btn').addEventListener('click', function () {
+    const modelId = this.getAttribute('data-model-id');
+    const url = `/test-model-performance/${modelId}/run/`;
+    const btn = this;
 
-    refresh(){
-      // placeholder to trigger UI refresh; replace with AJAX fetch
-      this.summaryCards[0].value = this.summaryCards[0].value;
-    },
+    // Loading state
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
 
-    runEvaluation(){
-      alert('Run evaluation on backend endpoint (implement view to handle)');
-    },
-
-    onQueryUpload(e){
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = () => { this.queryImage = reader.result; };
-      reader.readAsDataURL(file);
-    },
-
-    searchNeighbors(){
-      // send `this.queryImage` via fetch/htmx to backend to compute neighbors
-      alert('Search neighbors — implement backend to return neighbors');
-    }
-  }
-}
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert('Evaluation completed successfully!\nAccuracy: ' + data.knn_accuracy);
+          window.location.reload();
+        } else if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          alert('Unknown response from server');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while running evaluation.');
+      })
+      .finally(() => {
+        // Reset button state
+        btn.disabled = false;
+        btn.textContent = 'Activate';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      });
+  });
 </script>
+
+
+<!-- Confirmation modal (Alpine.js)
+<div x-show="confirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center">
+  <div class="fixed inset-0 bg-black bg-opacity-50" @click="confirmOpen = false"></div>
+  <div class="bg-white rounded shadow-lg p-6 z-10 w-11/12 max-w-md" @keydown.escape.window="confirmOpen = false">
+    <h3 class="text-lg font-medium mb-2">Confirm Run Evaluation</h3>
+    <p class="text-sm text-gray-600 mb-4">This will run the model evaluation on the backend. Do you want to continue?
+    </p>
+    <div class="flex justify-end gap-2">
+      <button @click="confirmOpen = false" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+      <button @click="runEvaluation()" class="px-4 py-2 bg-green-600 text-white rounded">Confirm</button>
+    </div>
+  </div>
+</div> -->
 
 {% endblock %}

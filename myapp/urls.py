@@ -34,8 +34,10 @@ urlpatterns = [
     path('delete-training/<int:session_id>/', PMai_views.delete_training_session, name='delete_training'),
 
     #test
-    path('test-model-performance/<int:model_id>/', PMai_views.Knn_test, name='test_model_performance'),
-
-
+    path(
+    'models/<int:model_id>/test-performance/',
+    PMai_views.knn_test,
+    name='knn_test'
+    )
 
 ]

@@ -227,7 +227,7 @@ class TrainingSession(models.Model):
         ('training', 'กำลัง train'),
         ('completed', 'train เสร็จแล้ว'),
         ('failed', 'train ล้มเหลว'),
-    ]
+    ]   
 
     training_name = models.CharField(max_length=255)
     model_name = models.CharField(max_length=100)
@@ -243,3 +243,17 @@ class TrainingSession(models.Model):
     
     def __str__(self):
         return f"{self.training_name} ({self.status})"
+
+class EvaluationResult(models.Model):
+    training_session = models.ForeignKey(
+        TrainingSession,
+        on_delete=models.CASCADE,
+        related_name="evaluations"
+    )
+    eval_type = models.CharField(max_length=50)  # knn, tsne
+    image = models.ImageField(upload_to="evaluation_plots/")
+    score = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.eval_type} - {self.training_session.training_name} - {self.image}"
