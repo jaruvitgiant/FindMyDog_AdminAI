@@ -132,7 +132,6 @@
           <div class="text-sm text-gray-500">Interactive</div>
         </div>
         <div class="mt-4 h-72 flex items-center justify-center border-2 border-dashed border-gray-200 rounded">
-          <!-- Placeholder for heatmap; integrate with charting library later -->
           <div class="text-gray-400">Heatmap placeholder (use Chart.js / Plotly)</div>
         </div>
       </div>
@@ -146,6 +145,34 @@
           <div class="text-gray-400">PCA 2D placeholder (use Plotly / Vega)</div>
         </div>
       </div>
+    </div>
+  </section>
+  <!-- Section 2: Plots -->
+  <section class="mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      {% for r in results %}
+      <div class="bg-white p-4 rounded shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-lg font-medium">
+            {{ r.eval_type|upper }} — Score: {{ r.score }}
+          </h2>
+          <div class="text-sm text-gray-500">
+            ID {{ r.id }}
+          </div>
+        </div>
+
+        <div class="mt-4 h-72 flex items-center justify-center border rounded overflow-hidden">
+          <img src="{{ r.image.url }}" alt="evaluation plot"
+              class="object-contain max-h-full">
+        </div>
+      </div>
+      {% empty %}
+        <div class="col-span-2 text-center text-gray-400">
+          No evaluation images found.
+        </div>
+      {% endfor %}
+
     </div>
   </section>
 

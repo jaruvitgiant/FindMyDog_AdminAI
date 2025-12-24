@@ -3,6 +3,9 @@ from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
 from . import PMai_views
+from django.conf.urls.static import static
+from django.conf import settings
+
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -34,10 +37,7 @@ urlpatterns = [
     path('delete-training/<int:session_id>/', PMai_views.delete_training_session, name='delete_training'),
 
     #test
-    path(
-    'models/<int:model_id>/test-performance/',
-    PMai_views.knn_test,
-    name='knn_test'
-    )
-
-]
+    path("models/<int:model_id>/test-performance/", PMai_views.knn_test, name="knn_test"),
+    #path('models/<int:model_id>/test-performance/images/', PMai_views.knn_test_images, name='knn_test_images')
+    path("models/<int:model_id>/knn/", PMai_views.show_img_test_knn, name="show_img_test_knn"),
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

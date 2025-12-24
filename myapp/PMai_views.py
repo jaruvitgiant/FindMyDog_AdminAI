@@ -234,11 +234,58 @@ def knn_test(request, model_id):
             score=accuracy
         )
 
-        return HttpResponse(f"Loaded {len(X)} images with labels. acc{accuracy:.4f}")
+                ##return HttpResponse(f"Loaded {len(X)} images with labels. acc{accuracy:.4f}")
     else:
         return HttpResponse("No images with embeddings found in this session.")
 
 
+def show_img_test_knn(request):
+        results = EvaluationResult.objects.filter(
+            training_session=session,
+            eval_type='knn'
+        ).exclude(image='')
+
+        context = {
+            "results": results,
+        }
+
+        return render(request, "admin/Training/test_model.html", context)
+
+
+
+
+
+def visualize_knn_results(image_ids, y_true, y_pred, num_samples=10):
+    """
+    ฟังก์ชันสำหรับดึงรูปจาก DB มาแสดงผลเปรียบเทียบ
+    """
+    # สุ่มเลือก index มาแสดง
+    indices = np.random.choice(len(image_ids), min(num_samples, len(image_ids)), replace=False)
+    
+    fig, axes = plt.subplots(2, 5, figsize=(15, 7)) # ปรับ size ตามจำนวนรูป
+    axes = axes.flatten()
+
+    for i, idx in enumerate(indices):
+        img_obj = TrainingImage.objects.get(id=image_ids[idx]) # ดึง Object รูปภาพ
+        
+        # โหลดรูปภาพ
+        img = Image.open(img_obj.image_file.path)
+        axes[i].imshow(img)
+        
+        # ตรวจสอบว่าทายถูกไหม
+        is_correct = y_true[idx] == y_pred[idx]
+        color = 'green' if is_correct else 'red'
+        
+        # แสดง Label (ควรดึงชื่อสุนัขมาแสดงแทน ID เพื่อความเข้าใจง่าย)
+        # true_name = Dog.objects.get(id=y_true[idx]).name
+        # pred_name = Dog.objects.get(id=y_pred[idx]).name
+        
+        axes[i].set_title(f"True: {y_true[idx]}\nPred: {y_pred[idx]}", color=color, fontsize=10)
+        axes[i].axis('off')
+
+    plt.tight_layout()
+    return fig
+    
 def TSNE_test(request,model_id):
     print("ENTER TSNE_test")
 
