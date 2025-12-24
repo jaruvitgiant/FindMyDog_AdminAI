@@ -35,9 +35,8 @@ urlpatterns = [
     path('start-training/', PMai_views.start_training, name='start_training'),
     path('train_model/', PMai_views.train_resnet18, name='train_model'),
     path('delete-training/<int:session_id>/', PMai_views.delete_training_session, name='delete_training'),
-
+ 
     #test
     path("models/<int:model_id>/test-performance/", PMai_views.knn_test, name="knn_test"),
-    #path('models/<int:model_id>/test-performance/images/', PMai_views.knn_test_images, name='knn_test_images')
-    path("models/<int:model_id>/knn/", PMai_views.show_img_test_knn, name="show_img_test_knn"),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

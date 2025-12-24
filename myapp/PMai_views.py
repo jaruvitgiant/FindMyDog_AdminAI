@@ -120,12 +120,20 @@ def test_model_performance(request, model_id):
     all_images_count = all_images.count()
     print("IMAGE COUNT =", all_images_count)
 
+    # Query evaluation result images for this training session
+    knn_res = EvaluationResult.objects.filter(training_session=model_data, eval_type='knn').last()
+    tsne_res = EvaluationResult.objects.filter(training_session=model_data, eval_type='tsne').last()
+    
+    # รวมเข้า list เพื่อส่งไป loop ใน template
+    results = filter(None, [knn_res, tsne_res])
+    
     context = {
         "training_name": model_data.training_name,
         "model_name": model_data.model_name,
         "created_at": model_data.data_added.strftime("%Y-%m-%d %H:%M"),
         "model_id": model_data.id,
         "all_images_count": all_images_count,
+        "results": results,
     }
 
     return render(request, "admin/Training/test_model.html", context)
@@ -158,7 +166,7 @@ import seaborn as sns
 
 from sklearn.metrics import confusion_matrix
 from scripts.Test_model.Test_KNN import fit_model_knn, save_plot_to_evaluation
-
+from scripts.Test_model.Test_TSNE import run_tsne
 def knn_test(request, model_id):
     session = get_object_or_404(TrainingSession, id=model_id)
     all_images = session.images.all()
@@ -233,60 +241,64 @@ def knn_test(request, model_id):
             eval_type="knn",
             score=accuracy
         )
+        plt.close(fig)
+        
+        # ====== TSNE ======
+        fig_tsne = run_tsne(X, y)
+        save_plot_to_evaluation(session, fig_tsne, "tsne", score=accuracy)
+        plt.close(fig_tsne)
 
-                ##return HttpResponse(f"Loaded {len(X)} images with labels. acc{accuracy:.4f}")
+        return redirect("test_model_performance", model_id=model_id)
+
+        # return HttpResponse(f"Loaded {len(X)} images with labels. acc{accuracy:.4f}")
     else:
         return HttpResponse("No images with embeddings found in this session.")
 
+# def tsne_test(request, model_id):
+#     session = get_object_or_404(TrainingSession, id=model_id)
+#     all_images = session.images.all()
 
-def show_img_test_knn(request):
-        results = EvaluationResult.objects.filter(
-            training_session=session,
-            eval_type='knn'
-        ).exclude(image='')
+#     EMBED_DIM = 512
+#     all_features = []
+#     all_labels = []
 
-        context = {
-            "results": results,
-        }
+#     for img in all_images:
+#         if not img.embedding_binary:
+#             continue
 
-        return render(request, "admin/Training/test_model.html", context)
+#         try:
+#             emb = np.frombuffer(
+#                 img.embedding_binary,
+#                 dtype=np.float32
+#             )
 
+#             if emb.size != EMBED_DIM:
+#                 print(f"Image {img.id}: invalid dim {emb.size}")
+#                 continue
 
+#             all_features.append(emb)
+#             all_labels.append(img.dog.id)
 
+#         except Exception as e:
+#             print(f"Error decoding embedding for image {img.id}: {e}")
 
+#     if all_features:
+#         X = np.array(all_features)
+#         y = np.array(all_labels)
 
-def visualize_knn_results(image_ids, y_true, y_pred, num_samples=10):
-    """
-    ฟังก์ชันสำหรับดึงรูปจาก DB มาแสดงผลเปรียบเทียบ
-    """
-    # สุ่มเลือก index มาแสดง
-    indices = np.random.choice(len(image_ids), min(num_samples, len(image_ids)), replace=False)
-    
-    fig, axes = plt.subplots(2, 5, figsize=(15, 7)) # ปรับ size ตามจำนวนรูป
-    axes = axes.flatten()
+#         # ====== CALL TSNE ======
+#         from scripts.Test_model.Test_TSNE import run_tsne
 
-    for i, idx in enumerate(indices):
-        img_obj = TrainingImage.objects.get(id=image_ids[idx]) # ดึง Object รูปภาพ
-        
-        # โหลดรูปภาพ
-        img = Image.open(img_obj.image_file.path)
-        axes[i].imshow(img)
-        
-        # ตรวจสอบว่าทายถูกไหม
-        is_correct = y_true[idx] == y_pred[idx]
-        color = 'green' if is_correct else 'red'
-        
-        # แสดง Label (ควรดึงชื่อสุนัขมาแสดงแทน ID เพื่อความเข้าใจง่าย)
-        # true_name = Dog.objects.get(id=y_true[idx]).name
-        # pred_name = Dog.objects.get(id=y_pred[idx]).name
-        
-        axes[i].set_title(f"True: {y_true[idx]}\nPred: {y_pred[idx]}", color=color, fontsize=10)
-        axes[i].axis('off')
+#         fig = run_tsne(X, y)
 
-    plt.tight_layout()
-    return fig
-    
-def TSNE_test(request,model_id):
-    print("ENTER TSNE_test")
+#         # ====== SAVE RESULT ======
+#         evaluation = save_plot_to_evaluation(
+#             training_session=session,
+#             fig=fig,
+#             eval_type="tsne"
+#         )
 
+#         return redirect("test_model_performance", model_id=model_id)
 
+#     else:
+#         return HttpResponse("No images with embeddings found in this session.")

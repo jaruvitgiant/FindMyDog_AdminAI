@@ -9,7 +9,7 @@
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-semibold">Model Performance — Test</h1>
     <div class="flex gap-2">
-      <button @click="refresh()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Refresh</button>
+      <a href="{% url 'page_training' %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block">Back</a>
       <button  command="show-modal" commandfor="dialog" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
         Run Evaluation
       </button>
@@ -59,7 +59,7 @@
                     Activate
                   </button>
                 </form>
-
+ 
 
                 <!-- CANCEL -->
                 <button type="button" command="close" commandfor="dialog"
@@ -124,7 +124,7 @@
   </section>
 
   <!-- Section 2: Plots -->
-  <section class="mb-8">
+  <!-- <section class="mb-8">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="bg-white p-4 rounded shadow-sm">
         <div class="flex items-center justify-between">
@@ -146,31 +146,42 @@
         </div>
       </div>
     </div>
-  </section>
+  </section> -->
   <!-- Section 2: Plots -->
   <section class="mb-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"> 
+      
       {% for r in results %}
-      <div class="bg-white p-4 rounded shadow-sm">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-lg font-medium">
-            {{ r.eval_type|upper }} — Score: {{ r.score }}
+      <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold text-gray-800">
+            {% if r.eval_type == 'knn' %}
+              📊 Confusion Matrix (KNN)
+            {% elif r.eval_type == 'tsne' %}
+              📍 t-SNE Visualization
+            {% else %}
+              {{ r.eval_type|upper }} Result
+            {% endif %}
           </h2>
-          <div class="text-sm text-gray-500">
-            ID {{ r.id }}
-          </div>
+          <span class="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded">
+            Score: {{ r.score|floatformat:4 }}
+          </span>
         </div>
 
-        <div class="mt-4 h-72 flex items-center justify-center border rounded overflow-hidden">
-          <img src="{{ r.image.url }}" alt="evaluation plot"
-              class="object-contain max-h-full">
+        <div class="relative h-80 w-full flex items-center justify-center border rounded bg-gray-50 overflow-hidden">
+          <img src="{{ r.image.url }}" 
+              alt="{{ r.eval_type }} plot"
+              class="object-contain max-h-full transition-transform duration-300 hover:scale-105">
+        </div>
+        
+        <div class="mt-2 text-right">
+          <p class="text-xs text-gray-400">Recorded on: {{ r.created_at|date:"d M Y H:i" }}</p>
         </div>
       </div>
       {% empty %}
-        <div class="col-span-2 text-center text-gray-400">
-          No evaluation images found.
-        </div>
+      <div class="col-span-full text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
+        <p class="text-gray-400">No evaluation images found. Please run the test first.</p>
+      </div>
       {% endfor %}
 
     </div>

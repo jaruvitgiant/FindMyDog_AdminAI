@@ -6,41 +6,6 @@ Training
 
 {% block content %}
 <div class="p-6 bg-gray-50 min-h-screen">
-    <h1 class="text-2xl font-semibold text-gray-900 mb-6">Training</h1>
-
-    <div x-data="{
-        trainingProgress: 30, // 0 to 100 for progress bar
-        accuracy: 0,
-        pause: false,
-        documentsUsedSteps: [0, 10, 30, 70, 200, 500, 1000]
-    }" class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center">
-                <h2 class="text-xl font-medium text-gray-700 mr-2">Automatic training</h2>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <div class="relative pt-1">
-                <div class="flex items-center justify-between h-2 mb-1">
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="h-2 rounded-full bg-blue-600" :style="`width: ${trainingProgress}%;`"></div>
-                    </div>
-                </div>
-                <div class="flex justify-between text-xs text-gray-500 font-medium -mt-2">
-                    <template x-for="(docCount, index) in documentsUsedSteps" :key="index">
-                        <div :class="{
-                            'text-blue-600 font-semibold': (trainingProgress / 100) * 100 >= (index / (documentsUsedSteps.length - 1)) * 100,
-                            'relative -top-2': index === 0 || index === (documentsUsedSteps.length - 1)
-                        }" class="text-center w-1/7">
-                            <span x-text="docCount"></span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
-
-    </div>
 
     <h2 class="text-xl font-semibold text-gray-900 mb-4">Models</h2>
     <div x-data="{ showTrainingModal: false }">
